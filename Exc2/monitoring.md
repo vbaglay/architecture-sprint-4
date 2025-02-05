@@ -96,3 +96,11 @@ Kb transferred (received) for shop API / CRM API / MES API
 
 Kb provided (sent) for shop API / CRM API / MES API
 Зачем нужна: Показывает объем отправленного трафика, помогает анализировать сетевую активность.Ярлыки: сервис (service), метод (method).
+
+### План действий 
+
+1. Развернуть инстанс VictoriaMetrics
+2. Развернуть Prometheus который использует VictoriaMetrics(можно обойтись на первом этапе встроенной tsdb)
+3. Развернуть агенты exporters для Postgres, RabbitMq, prometheus-net, Micrometer + Prometheus и system metrics: Node Exporters, Cloud specific, etc..
+5. Развернуть Graphana и настроить dashboards
+6. Реализовать метрики в сервисах(shop api, mes api)
