@@ -1,0 +1,38 @@
+@startuml
+
+actor "Operator" as Operator
+participant "MES API" as API
+participant "Cache (Redis)" as Cache
+participant "Database (PostgreSQL)" as DB
+participant "Cache Warmup Service" as Warmup
+
+'--------------------------
+== Cache Warmup Process ==
+Warmup -> DB: Query последние заказы
+DB --> Warmup: Вернуть список заказов
+Warmup -> Cache: Записить заказы в кэш (write-through)
+note right of Warmup: Заказы "прогреты"
+
+'--------------------------
+== Read Operation (Read-Through) ==
+Operator -> API: Запросить список заказов
+API -> Cache: Получить список (read-through)
+alt Cache hit
+    Cache --> API: Получить "прогретый" список
+else Cache miss
+    API -> DB: Query список заказов
+    DB --> API: Вернуть список заказов
+    API -> Cache: Записать список заказов в кэш(write-through)
+end
+API -> Operator: Вернуть список заказов (read-through)
+
+'--------------------------
+== Update order/status (Write-Through) ==
+Operator -> API: Обновить status по OrderID
+API -> DB: Обновить статус заказа в БД
+DB --> API: Подтвердить обновление
+API -> Cache: Обновить cache entry для OrderID (write-through)
+Cache --> API: Подтвердить cache update
+API -> Operator: Подтвердить операцию обновления
+
+@enduml
